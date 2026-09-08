@@ -10,6 +10,16 @@ export const authApi = axios.create({
   withCredentials: true,
 })
 
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) {
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
+
 export const getMe = () => authApi.get('/auth/me').then(r => r.data)
 export const logout = () => authApi.post('/auth/logout').then(r => r.data)
 

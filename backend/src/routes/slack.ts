@@ -4,20 +4,14 @@ import { env } from '../config/env';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { exchangeCodeForToken } from '../services/slackService';
+import type { User } from '../db/schema';
 
 const router = Router();
 
 router.get('/connect', (req: Request, res: Response) => {
-  const { userId } = req.query;
-
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId query param required' });
-    return;
-  }
-
+  const user = req.user as User;
   const scopes = 'incoming-webhook,chat:write';
-  const url = `https://slack.com/oauth/v2/authorize?client_id=${env.SLACK_CLIENT_ID}&scope=${scopes}&redirect_uri=${encodeURIComponent(env.SLACK_REDIRECT_URI)}&state=${userId}`;
-
+  const url = `https://slack.com/oauth/v2/authorize?client_id=${env.SLACK_CLIENT_ID}&scope=${scopes}&redirect_uri=${encodeURIComponent(env.SLACK_REDIRECT_URI)}&state=${user.id}`;
   res.redirect(url);
 });
 
@@ -41,38 +35,28 @@ router.get('/callback', async (req: Request, res: Response) => {
     .set({ slackToken: accessToken, slackChannel: channel })
     .where(eq(users.id, userId));
 
-  res.redirect(`${env.FRONTEND_URL}/dashboard?slack=connected`);
+  res.redirect(`${env.FRONTEND_URL}/dashboard/scheduled?slack=connected`);
 });
 
 router.post('/disconnect', async (req: Request, res: Response) => {
-  const { userId } = req.body;
-
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId required' });
-    return;
-  }
+  const user = req.user as User;
 
   await db
     .update(users)
     .set({ slackToken: null, slackChannel: null })
-    .where(eq(users.id, userId));
+    .where(eq(users.id, user.id));
 
   res.json({ success: true });
 });
 
 router.get('/status', async (req: Request, res: Response) => {
-  const { userId } = req.query;
+  const user = req.user as User;
 
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId query param required' });
-    return;
-  }
-
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
+  const found = await db.query.users.findFirst({
+    where: eq(users.id, user.id),
   });
 
-  res.json({ connected: !!user?.slackToken, channel: user?.slackChannel ?? null });
+  res.json({ connected: !!found?.slackToken, channel: found?.slackChannel ?? null });
 });
 
 export default router;

@@ -158,17 +158,13 @@ export default function ComposePage() {
 
             {showSchedulePicker && (
               <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-100 rounded-xl shadow-lg z-20 p-4">
-                <div className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2 mb-3 cursor-pointer hover:bg-gray-50">
-                  <span className="text-sm text-gray-400">Pick date & time</span>
+                <div className="mb-3">
                   <input
                     type="datetime-local"
                     value={scheduledAt}
                     onChange={e => setScheduledAt(e.target.value)}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                    className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-green-400"
                   />
-                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round" />
-                  </svg>
                 </div>
 
                 <div className="flex flex-col gap-0.5 mb-4">
