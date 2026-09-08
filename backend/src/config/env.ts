@@ -24,4 +24,6 @@ export const env = {
   SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID || '',
   SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET || '',
   SLACK_REDIRECT_URI: process.env.SLACK_REDIRECT_URI || 'http://localhost:3001/slack/callback',
+
+  ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
 } as const;

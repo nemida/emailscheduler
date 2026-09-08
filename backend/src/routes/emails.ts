@@ -2,8 +2,26 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { emails } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { searchEmails } from '../services/elasticService';
 
 const router = Router();
+
+router.get('/search', async (req: Request, res: Response) => {
+  const { q, userId } = req.query;
+
+  if (!userId || typeof userId !== 'string') {
+    res.status(400).json({ error: 'userId query param required' });
+    return;
+  }
+
+  if (!q || typeof q !== 'string') {
+    res.status(400).json({ error: 'q query param required' });
+    return;
+  }
+
+  const results = await searchEmails(userId, q);
+  res.json(results);
+});
 
 router.get('/', async (req: Request, res: Response) => {
   const { userId, status } = req.query;

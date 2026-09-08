@@ -6,6 +6,7 @@ import { db } from '../db';
 import { emails, campaigns, senders } from '../db/schema';
 import { sendEmail } from '../services/mailerService';
 import { notifyRateLimitHit } from '../services/slackService';
+import { indexEmail, updateEmailStatus, ensureIndex } from '../services/elasticService';
 import { EmailJobData } from '../queues/emailQueue';
 
 const RATE_LIMIT_KEY = (senderId: string) => {
@@ -80,6 +81,21 @@ async function processEmail(job: Job<EmailJobData>) {
       .set({ status: 'sent', sentAt: new Date(), errorMessage: null })
       .where(eq(emails.id, emailId));
 
+    const sentAt = new Date().toISOString();
+
+    await indexEmail({
+      emailId,
+      campaignId,
+      userId: existingEmail.userId,
+      recipient,
+      subject,
+      body,
+      status: 'sent',
+      sentAt,
+      scheduledAt: existingEmail.scheduledAt.toISOString(),
+      createdAt: existingEmail.createdAt.toISOString(),
+    }).catch(() => {});
+
     await db
       .update(campaigns)
       .set({ sentCount: sql`${campaigns.sentCount} + 1` })
@@ -105,11 +121,15 @@ async function processEmail(job: Job<EmailJobData>) {
       .set({ status: 'failed', errorMessage: message })
       .where(eq(emails.id, emailId));
 
+    await updateEmailStatus(emailId, 'failed').catch(() => {});
+
     throw err;
   }
 }
 
 export function startEmailWorker() {
+  ensureIndex().catch((err) => console.error('Failed to ensure ES index:', err));
+
   const worker = new Worker<EmailJobData>('emails', processEmail, {
     connection: redis,
     concurrency: env.WORKER_CONCURRENCY,
