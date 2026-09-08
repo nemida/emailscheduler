@@ -3,6 +3,8 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
+import DashboardPage from './pages/DashboardPage'
+import EmailDetailPage from './pages/EmailDetailPage'
 
 export default function App() {
   return (
@@ -12,16 +14,23 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
-            path="/dashboard"
+            path="/dashboard/:tab"
             element={
               <ProtectedRoute>
-                <div className="flex items-center justify-center h-screen text-gray-400 text-sm">
-                  
-                </div>
+                <DashboardPage />
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/email/:id"
+            element={
+              <ProtectedRoute>
+                <EmailDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/dashboard" element={<Navigate to="/dashboard/scheduled" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard/scheduled" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
