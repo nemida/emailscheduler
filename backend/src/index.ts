@@ -8,6 +8,7 @@ import { emailQueue } from './queues/emailQueue';
 import { startEmailWorker } from './workers/emailWorker';
 import campaignsRouter from './routes/campaigns';
 import emailsRouter from './routes/emails';
+import slackRouter from './routes/slack';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/campaigns', campaignsRouter);
 app.use('/api/emails', emailsRouter);
+app.use('/slack', slackRouter);
 
 app.listen(env.PORT, () => {
   console.log(`Server running on port ${env.PORT}`);

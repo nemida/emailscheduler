@@ -5,6 +5,7 @@ import { env } from '../config/env';
 import { db } from '../db';
 import { emails, campaigns, senders } from '../db/schema';
 import { sendEmail } from '../services/mailerService';
+import { notifyRateLimitHit } from '../services/slackService';
 import { EmailJobData } from '../queues/emailQueue';
 
 const RATE_LIMIT_KEY = (senderId: string) => {
@@ -19,12 +20,6 @@ async function checkAndIncrementRateLimit(senderId: string, limit: number): Prom
     await redis.expire(key, 3600);
   }
   return count <= limit;
-}
-
-async function getRateLimitCount(senderId: string): Promise<number> {
-  const key = RATE_LIMIT_KEY(senderId);
-  const val = await redis.get(key);
-  return val ? parseInt(val, 10) : 0;
 }
 
 async function processEmail(job: Job<EmailJobData>) {
@@ -54,6 +49,12 @@ async function processEmail(job: Job<EmailJobData>) {
   if (!withinLimit) {
     const msUntilNextHour = 3_600_000 - (Date.now() % 3_600_000);
     console.log(`Rate limit hit for sender ${senderId}, rescheduling in ${msUntilNextHour}ms`);
+
+    const sender = await db.query.senders.findFirst({ where: eq(senders.id, senderId) });
+    if (sender) {
+      await notifyRateLimitHit(sender.userId, sender.email).catch(() => {});
+    }
+
     await job.moveToDelayed(Date.now() + msUntilNextHour);
     return;
   }

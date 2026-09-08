@@ -20,4 +20,8 @@ export const env = {
   SESSION_SECRET: process.env.SESSION_SECRET || 'change-me-in-production',
 
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+
+  SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID || '',
+  SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET || '',
+  SLACK_REDIRECT_URI: process.env.SLACK_REDIRECT_URI || 'http://localhost:3001/slack/callback',
 } as const;
