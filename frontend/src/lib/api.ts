@@ -17,6 +17,10 @@ export const getCampaigns = () => api.get('/campaigns').then(r => r.data)
 export const getCampaign = (id: string) => api.get(`/campaigns/${id}`).then(r => r.data)
 export const scheduleCampaign = (payload: object) => api.post('/campaigns', payload).then(r => r.data)
 
+export const getSenders = () => api.get('/senders').then(r => r.data)
+export const createSender = (payload: object) => api.post('/senders', payload).then(r => r.data)
+export const deleteSender = (id: string) => api.delete(`/senders/${id}`).then(r => r.data)
+
 export const getEmails = (status?: string) =>
   api.get('/emails', { params: status ? { status } : {} }).then(r => r.data)
 

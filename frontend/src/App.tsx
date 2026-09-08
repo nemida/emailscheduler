@@ -5,6 +5,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import EmailDetailPage from './pages/EmailDetailPage'
+import ComposePage from './pages/ComposePage'
 
 export default function App() {
   return (
@@ -26,6 +27,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <EmailDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compose"
+            element={
+              <ProtectedRoute>
+                <ComposePage />
               </ProtectedRoute>
             }
           />

@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: "Type Your Reply...";
+  color: #9ca3af;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

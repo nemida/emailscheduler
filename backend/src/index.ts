@@ -12,6 +12,7 @@ import { startEmailWorker } from './workers/emailWorker';
 import authRouter from './routes/auth';
 import campaignsRouter from './routes/campaigns';
 import emailsRouter from './routes/emails';
+import sendersRouter from './routes/senders';
 import slackRouter from './routes/slack';
 import { requireAuth } from './middleware/auth';
 
@@ -53,6 +54,7 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRouter);
 app.use('/api/campaigns', requireAuth, campaignsRouter);
 app.use('/api/emails', requireAuth, emailsRouter);
+app.use('/api/senders', requireAuth, sendersRouter);
 app.use('/slack', requireAuth, slackRouter);
 
 app.listen(env.PORT, () => {

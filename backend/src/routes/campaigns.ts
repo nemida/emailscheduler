@@ -3,13 +3,15 @@ import { db } from '../db';
 import { campaigns } from '../db/schema';
 import { scheduleCampaign } from '../services/campaignService';
 import { eq } from 'drizzle-orm';
+import type { User } from '../db/schema';
 
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
-  const { userId, senderId, subject, body, recipients, scheduledAt, delaySeconds, hourlyLimit } = req.body;
+  const user = req.user as User;
+  const { senderId, subject, body, recipients, scheduledAt, delaySeconds, hourlyLimit } = req.body;
 
-  if (!userId || !senderId || !subject || !body || !recipients?.length || !scheduledAt) {
+  if (!senderId || !subject || !body || !recipients?.length || !scheduledAt) {
     res.status(400).json({ error: 'Missing required fields' });
     return;
   }
@@ -20,7 +22,7 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   const campaign = await scheduleCampaign({
-    userId,
+    userId: user.id,
     senderId,
     subject,
     body,
@@ -34,15 +36,10 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.get('/', async (req: Request, res: Response) => {
-  const { userId } = req.query;
-
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId query param required' });
-    return;
-  }
+  const user = req.user as User;
 
   const result = await db.query.campaigns.findMany({
-    where: eq(campaigns.userId, userId),
+    where: eq(campaigns.userId, user.id),
     orderBy: (c, { desc }) => [desc(c.createdAt)],
   });
 

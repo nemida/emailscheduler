@@ -3,35 +3,28 @@ import { db } from '../db';
 import { emails } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { searchEmails } from '../services/elasticService';
+import type { User } from '../db/schema';
 
 const router = Router();
 
 router.get('/search', async (req: Request, res: Response) => {
-  const { q, userId } = req.query;
-
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId query param required' });
-    return;
-  }
+  const user = req.user as User;
+  const { q } = req.query;
 
   if (!q || typeof q !== 'string') {
     res.status(400).json({ error: 'q query param required' });
     return;
   }
 
-  const results = await searchEmails(userId, q);
+  const results = await searchEmails(user.id, q);
   res.json(results);
 });
 
 router.get('/', async (req: Request, res: Response) => {
-  const { userId, status } = req.query;
+  const user = req.user as User;
+  const { status } = req.query;
 
-  if (!userId || typeof userId !== 'string') {
-    res.status(400).json({ error: 'userId query param required' });
-    return;
-  }
-
-  const conditions = [eq(emails.userId, userId)];
+  const conditions = [eq(emails.userId, user.id)];
 
   if (status && typeof status === 'string') {
     conditions.push(eq(emails.status, status as 'scheduled' | 'sent' | 'failed'));
