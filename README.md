@@ -22,3 +22,14 @@ commit 6d37a74
 - GET /api/emails?userId=&status= — list emails with optional status filter
 - PATCH /api/emails/:id/star — toggle starred on an email
 - Bull Board mounted at /admin/queues for live queue visibility
+
+commit [M3]
+- added Ethereal Email SMTP integration via nodemailer — creates a test account on first send, logs preview URL to console so you can inspect sent emails at ethereal.email
+- built BullMQ email worker with configurable concurrency (WORKER_CONCURRENCY env var)
+- worker checks idempotency before processing — skips if email already marked sent
+- rate limiting enforced per sender per hour window using Redis counters (key: rate:{senderId}:{hourWindow}) — safe across multiple worker instances
+- when hourly limit is hit, job is rescheduled to the start of the next hour window rather than dropped
+- minimum delay between sends enforced after each successful send (MIN_DELAY_BETWEEN_SENDS_MS env var, default 2000ms)
+- email status updated to sent/failed in DB after each job
+- campaign sentCount incremented atomically after each send, campaign marked completed when sentCount reaches totalCount
+- worker started automatically alongside the Express server

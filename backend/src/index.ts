@@ -5,6 +5,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { env } from './config/env';
 import { emailQueue } from './queues/emailQueue';
+import { startEmailWorker } from './workers/emailWorker';
 import campaignsRouter from './routes/campaigns';
 import emailsRouter from './routes/emails';
 
@@ -34,5 +35,7 @@ app.listen(env.PORT, () => {
   console.log(`Server running on port ${env.PORT}`);
   console.log(`Bull Board: http://localhost:${env.PORT}/admin/queues`);
 });
+
+startEmailWorker();
 
 export default app;
