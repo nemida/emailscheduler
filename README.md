@@ -12,7 +12,7 @@ commit 63a72b0
 - made the compose yaml file for redis and docker
 - made the schema with three tables, emails senders users campaign
 
-commit [M2]
+commit 6d37a74
 - added Redis client via ioredis
 - set up BullMQ email queue with 3 retry attempts and exponential backoff
 - built campaign service: creates a campaign row, fans out individual email rows per recipient with staggered scheduled times based on delaySeconds, and enqueues a BullMQ delayed job per email using the idempotencyKey as the jobId to prevent duplicates
