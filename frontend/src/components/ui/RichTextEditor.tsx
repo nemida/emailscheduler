@@ -17,7 +17,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
     extensions: [
       StarterKit,
       Underline,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TextAlign.configure({ types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
       Table.configure({ resizable: false }),
       TableRow,
       TableCell,

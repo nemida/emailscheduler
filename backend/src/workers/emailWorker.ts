@@ -1,4 +1,4 @@
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, DelayedError } from 'bullmq';
 import { eq, sql } from 'drizzle-orm';
 import { redis } from '../config/redis';
 import { env } from '../config/env';
@@ -49,15 +49,29 @@ async function processEmail(job: Job<EmailJobData>) {
 
   if (!withinLimit) {
     const msUntilNextHour = 3_600_000 - (Date.now() % 3_600_000);
-    console.log(`Rate limit hit for sender ${senderId}, rescheduling in ${msUntilNextHour}ms`);
+    const nextFireAt = new Date(Date.now() + msUntilNextHour);
+    console.log(`Rate limit hit for sender ${senderId}, rescheduling to ${nextFireAt.toISOString()}`);
+
+    await redis.decr(RATE_LIMIT_KEY(senderId));
+
+    await db
+      .update(emails)
+      .set({ scheduledAt: nextFireAt })
+      .where(eq(emails.id, emailId));
 
     const sender = await db.query.senders.findFirst({ where: eq(senders.id, senderId) });
     if (sender) {
-      await notifyRateLimitHit(sender.userId, sender.email).catch(() => {});
+      await notifyRateLimitHit(sender.userId, sender.email, {
+        recipientCount: 1,
+        subject,
+        nextFireAt,
+      }).catch((err) => {
+        console.error('Slack notification failed:', err.message);
+      });
     }
 
-    await job.moveToDelayed(Date.now() + msUntilNextHour);
-    return;
+    await job.moveToDelayed(Date.now() + msUntilNextHour, job.token);
+    throw new DelayedError();
   }
 
   const sender = await db.query.senders.findFirst({

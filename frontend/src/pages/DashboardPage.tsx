@@ -20,8 +20,8 @@ export default function DashboardPage() {
   const [scheduledCount, setScheduledCount] = useState(0)
   const [sentCount, setSentCount] = useState(0)
 
-  const fetchEmails = useCallback(async () => {
-    setLoading(true)
+  const fetchEmails = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const data = await getEmails(activeTab)
       setEmails(data)
@@ -49,6 +49,15 @@ export default function DashboardPage() {
     fetchEmails()
     fetchCounts()
   }, [fetchEmails, fetchCounts])
+
+  useEffect(() => {
+    if (activeTab !== 'scheduled') return
+    const interval = setInterval(() => {
+      fetchEmails(true)
+      fetchCounts()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [activeTab, fetchEmails, fetchCounts])
 
   const handleSearch = async (q: string) => {
     setSearchQuery(q)
@@ -97,7 +106,7 @@ export default function DashboardPage() {
             </svg>
           </button>
 
-          <button onClick={fetchEmails} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={() => fetchEmails()} className="text-gray-400 hover:text-gray-600 transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
             </svg>

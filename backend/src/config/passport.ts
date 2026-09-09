@@ -3,7 +3,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { eq } from 'drizzle-orm';
 import { env } from './env';
 import { db } from '../db';
-import { users } from '../db/schema';
+import { users, senders } from '../db/schema';
 import type { User } from '../db/schema';
 
 passport.use(
@@ -40,6 +40,16 @@ passport.use(
             avatar,
           })
           .returning();
+
+        await db.insert(senders).values({
+          userId: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          smtpHost: 'smtp.ethereal.email',
+          smtpPort: 587,
+          smtpUser: 'ethereal',
+          smtpPass: 'ethereal',
+        });
 
         return done(null, newUser);
       } catch (err) {

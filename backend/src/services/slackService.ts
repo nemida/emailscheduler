@@ -2,16 +2,38 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function notifyRateLimitHit(userId: string, senderEmail: string) {
+export async function notifyRateLimitHit(
+  userId: string,
+  senderEmail: string,
+  context: {
+    recipientCount: number;
+    subject: string;
+    nextFireAt: Date;
+  }
+) {
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
 
   if (!user?.slackToken || !user?.slackChannel) return;
 
-  const message = `Rate limit hit for sender *${senderEmail}*. Emails have been rescheduled to the next hour window.`;
+  const nextTime = context.nextFireAt.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 
-  await fetch('https://slack.com/api/chat.postMessage', {
+  const message = [
+    `*Rate limit hit* for sender *${senderEmail}*`,
+    ``,
+    `• *Subject:* ${context.subject}`,
+    `• *Affected emails:* ${context.recipientCount} remaining in queue`,
+    `• *Rescheduled to:* ${nextTime} IST`,
+    ``,
+    `Jobs have been moved to the next hour window and will send automatically.`,
+  ].join('\n');
+
+  const response = await fetch('https://slack.com/api/chat.postMessage', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -22,6 +44,13 @@ export async function notifyRateLimitHit(userId: string, senderEmail: string) {
       text: message,
     }),
   });
+
+  const result = await response.json() as { ok: boolean; error?: string };
+  if (!result.ok) {
+    console.error('Slack postMessage failed:', result.error);
+  } else {
+    console.log('Slack notification sent successfully');
+  }
 }
 
 export async function exchangeCodeForToken(code: string): Promise<{
